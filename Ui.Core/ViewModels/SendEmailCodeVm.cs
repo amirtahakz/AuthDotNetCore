@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 
 namespace Ui.Core.ViewModels
 {
-    public class ConfirmEmailCodeVm
+    public class SendEmailCodeVm
     {
-        [Required(ErrorMessage = "{0} is required.")]
+        [Required]
         [EmailAddress]
         public string Email { get; set; }
-
-        [Required(ErrorMessage = "{0} is required.")]
-        public string Code { get; set; }
     }
 }

@@ -152,6 +152,30 @@ namespace Ui.Client.Controllers
             return RedirectToAction("ConfirmEmailCode", new { email = user.Email });
         }
 
+
+        [AllowAnonymous]
+        public IActionResult SendEmailCodeVerification()
+        {
+            return View();
+        }
+        public async Task<IActionResult> SendEmailCodeVerification(SendEmailCodeVm model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            // Send Email Confirmation Code
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "User not found");
+                return View(model);
+            }
+            var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Email confirmation", "Ypur security code is" + code));
+
+            return RedirectToAction("Login");
+        }
+
+
         [AllowAnonymous]
         public IActionResult ConfirmEmailCode(string email)
         {

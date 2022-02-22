@@ -161,18 +161,35 @@ namespace Ui.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ResponseVm { Status = "Error", Response = "User creation failed! Please check user details and try again." });
 
-
             // Send Email Confirmation Code
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            var emailCode = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            string body = System.IO.File.ReadAllText
-                (@"E:\Dot Net Core Projects\My\Identity\DotNetCore\Ui.Api\Tools\RegisterEmailConfirmation.html") + emailCode;
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Confirm account email", body));
+            var sentEmailCode = await SendEmailCode(new SendEmailCodeVm() { Email = model.Email});
 
+            if (sentEmailCode == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ResponseVm { Status = "Error", Response = "Something is wrong" });
+            }
 
             return Ok(new ResponseVm { Status = "Success", Response = "User created successfully! please confirm your email" });
         }
+        [HttpPost]
+        [Route("SendEmailCode")]
+        public async Task<IActionResult> SendEmailCode([FromBody] SendEmailCodeVm model)
+        {
+            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
+                new ResponseVm { Status = "Error", Response = "Email is not valid" });
 
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user == null)
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ResponseVm { Status = "Error", Response = "User not found" });
+
+            var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Confirm email", "Your security code is" + code));
+
+            return Ok(new ResponseVm { Status = "Success", Response = "Your email confirmed successfully!" });
+        }
 
         [HttpPost]
         [Route("RegisterAdmin")]
