@@ -9,7 +9,7 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="returnUrl">
+        <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="/">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Email" class="control-label"></label>
@@ -31,29 +31,7 @@
             </div>
         </form>
     </div>
-    <div class="col-md-6">
-        @{
-            if (Model.ExternalLogins.Count == 0)
-            {
-                <div>No external login</div>
-            }
-            else
-            {
-                <div>External login</div>
-                <form method="post" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="returnUrl">
-                    @foreach (var provider in Model.ExternalLogins)
-                    {
-                        <button type="submit" class="btn btn-primary"
-                        name="provider"
-                        value="@provider.Name"
-                        title="Login using your @provider.DisplayName account">
-                        @provider.DisplayName
-                        </button>
-                    }
-                </form>
-            }
-        }
-    </div>
+    <partial name="Account/_ExternalLoginsListPartial" />
 </div>
 
 <div>

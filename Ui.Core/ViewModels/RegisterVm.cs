@@ -18,7 +18,7 @@ namespace Ui.Core.ViewModels
 
         [Required(ErrorMessage = "{0} is required.")]
         [Phone]
-        public String Phone { get; set; }
+        public string Phone { get; set; }
 
         [DataType(DataType.Password)]
         [Required(ErrorMessage = "{0} is required.")]

@@ -11,7 +11,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Ui.Core.Models;
 using Ui.Core.Repositories;
 using Ui.Core.ViewModels;
 using Ui.Data.Entities;
@@ -34,7 +33,7 @@ namespace Ui.Api.Controllers
         private readonly IEmailService _emailService;
         private readonly ITokenGeneratorService _tokenGeneratorService;
 
-        public AccountController(IConfiguration config, IExampleService exampleService, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager, IEmailService emailService , ITokenGeneratorService tokenGeneratorService)
+        public AccountController(IConfiguration config, IExampleService exampleService, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, ITokenGeneratorService tokenGeneratorService)
         {
             _exampleService = exampleService;
             _configuration = config;
@@ -68,20 +67,26 @@ namespace Ui.Api.Controllers
                         new ResponseVm { Status = "Error", Response = "Please confirm your email" });
                 }
 
-                var userRoles = await _userManager.GetRolesAsync(user); 
+                var userRoles = await _userManager.GetRolesAsync(user);
 
-                string accessToken = _tokenGeneratorService.GenerateToken(user , userRoles);
+                string accessToken = _tokenGeneratorService.GenerateToken(user, userRoles);
                 string refreshToken = _tokenGeneratorService.GenerateRefreshToken();
-                
-
-                RefreshToken refreshTokenDTO = new RefreshToken()
+                var res = _tokenGeneratorService.GetByUserId(user.Id);
+                if (res.Result != null)
                 {
-                    ReToken = refreshToken,
-                    UserName = user.UserName
-                };
-                await _tokenGeneratorService.CreateRefreshToken(refreshTokenDTO);
+                    await _tokenGeneratorService.DeleteRefreshToken(res.Result.Id);
+                }
 
-                return Ok(new ResponseVm { Status = "Success", Response = new { accessToken , refreshToken } });
+
+
+                UserRefreshToken item = new UserRefreshToken()
+                {
+                    RefreshToken = refreshToken,
+                    UserId = user.Id,
+                };
+                await _tokenGeneratorService.CreateRefreshToken(item);
+
+                return Ok(new ResponseVm { Status = "Success", Response = new { accessToken, refreshToken } });
             }
             return Unauthorized();
         }
@@ -100,31 +105,31 @@ namespace Ui.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "Invalid refresh token." });
             }
 
-            //RefreshToken refreshTokenDTO = await _tokenGeneratorService.GetByRefreshToken(model.RefreshToken);
-            //if (refreshTokenDTO == null)
-            //{
-            //    return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "Invalid refresh token." });
-            //}
+            UserRefreshToken res = await _tokenGeneratorService.GetByRefreshToken(model.RefreshToken);
+            if (res == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "Invalid refresh token." });
+            }
 
-            var user = await _userManager.FindByNameAsync(refreshTokenDTO.UserName);
+            var user = await _userManager.FindByIdAsync(res.UserId);
             if (user == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "User not found." });
             }
 
 
-            //await _tokenGeneratorService.DeleteRefreshToken(refreshTokenDTO.Id);
+            await _tokenGeneratorService.DeleteRefreshToken(res.Id);
 
             var userRoles = await _userManager.GetRolesAsync(user);
             string accessToken = _tokenGeneratorService.GenerateToken(user, userRoles);
             string refreshToken = _tokenGeneratorService.GenerateRefreshToken();
 
-            //RefreshToken item = new RefreshToken()
-            //{
-            //    ReToken = refreshToken,
-            //    UserName = user.UserName
-            //};
-            //await _tokenGeneratorService.CreateRefreshToken(item);
+            UserRefreshToken item = new UserRefreshToken()
+            {
+                RefreshToken = refreshToken,
+                UserId = user.Id,
+            };
+            await _tokenGeneratorService.CreateRefreshToken(item);
 
             return Ok(new ResponseVm { Status = "Success", Response = new { accessToken, refreshToken } });
 
@@ -287,7 +292,7 @@ namespace Ui.Api.Controllers
             var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
             if (!result.Succeeded) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "Something is wrong"});
+                new ResponseVm { Status = "Error", Response = "Something is wrong" });
 
             return Ok(new ResponseVm { Status = "Success", Response = "Password Changed successfully!" });
         }

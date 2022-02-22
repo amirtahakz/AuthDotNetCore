@@ -1,0 +1,30 @@
+﻿@model Ui.Core.ViewModels.LoginVm
+
+@{
+    ViewData["Title"] = "Login";
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="col-md-6">
+    @{
+        if (Model.ExternalLogins.Count == 0)
+        {
+            <div>No external login</div>
+        }
+        else
+        {
+            <div>External login</div>
+            <form method="post" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="returnUrl">
+                @foreach (var provider in Model.ExternalLogins)
+                {
+                    <button type="submit" class="btn btn-primary"
+                    name="provider"
+                    value="@provider.Name"
+                    title="Login using your @provider.DisplayName account">
+                        @provider.DisplayName
+                    </button>
+                }
+            </form>
+        }
+    }
+</div>

@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualBasic.CompilerServices;
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ui.Data.Entities
 {
@@ -9,11 +11,12 @@ namespace Ui.Data.Entities
         #region Properties
 
         [Key]
-        public long Id { get; protected set; }
+        public Guid Id { get; protected set; }
 
         [Required(ErrorMessage = "{0} is required.")]
-        public DateTime DateCreated { get; set; }
+        public DateTime DateCreated { get; set; } = DateTime.Now;
 
+        [DefaultValue(false)]
         [Required(ErrorMessage = "{0} is required.")]
         public bool IsRemove { get; set; }
 

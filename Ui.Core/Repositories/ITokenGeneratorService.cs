@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Ui.Core.Models;
+using Ui.Data.Entities;
 
 namespace Ui.Core.Repositories
 {
@@ -18,12 +18,12 @@ namespace Ui.Core.Repositories
 
         bool ValidateRefreshToken(string refreshToken);
 
-        //Task CreateRefreshToken(RefreshToken model);
-        //Task<RefreshToken> GetByRefreshToken(string refreshToken);
+        Task CreateRefreshToken(UserRefreshToken model);
 
-        //Task DeleteRefreshToken(Guid id);
+        Task<UserRefreshToken> GetByRefreshToken(string refreshToken);
 
-        //Task DeleteAllRefreshTokens(string userName);
+        Task DeleteRefreshToken(Guid id);
+        Task<UserRefreshToken> GetByUserId(string userId);
 
         #endregion
     }

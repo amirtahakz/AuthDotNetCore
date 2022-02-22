@@ -17,6 +17,7 @@ namespace Ui.Data.Context
         //"DefaultConnection": "data source=.;initial catalog=kzCoreData2; integrated security=true"
         //}
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
     }
 }

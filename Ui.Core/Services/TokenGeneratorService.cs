@@ -9,17 +9,19 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Ui.Core.Repositories;
+using Ui.Data.Context;
+using Ui.Data.Entities;
 
 namespace Ui.Core.Services
 {
-    public class TokenGeneratorService : ITokenGeneratorService
+    public class TokenGeneratorService : BaseService<UserRefreshToken> , ITokenGeneratorService
     {
 
         #region Connections
 
         private IConfiguration _configuration;
 
-        public TokenGeneratorService(IConfiguration config)
+        public TokenGeneratorService(ApplicationDbContext context , IConfiguration config): base(context)
         {
             _configuration = config;
         }
@@ -94,36 +96,43 @@ namespace Ui.Core.Services
             }
         }
 
-        //public Task CreateRefreshToken(RefreshToken refreshToken)
-        //{
-        //    refreshToken.Id = Guid.NewGuid();
+        public async Task CreateRefreshToken(UserRefreshToken refreshToken)
+        {
+            await AddAsync(refreshToken);
+        }
 
-        //    _refreshTokens.Add(refreshToken);
+        public Task<UserRefreshToken> GetByRefreshToken(string refreshToken)
+        {
+            try
+            {
+                UserRefreshToken result = Table().FirstOrDefault(r => r.RefreshToken == refreshToken);
 
-        //    return Task.CompletedTask;
-        //}
+                return Task.FromResult(result);
+            }
+            catch (Exception)
+            {
 
-        //public Task<RefreshToken> GetByRefreshToken(string refreshToken)
-        //{
-        //    var tt = _refreshTokens.Count();
-        //    RefreshToken result = _refreshTokens.FirstOrDefault(r => r.ReToken == refreshToken);
+                return null;
+            }
+        }
 
-        //    return Task.FromResult(result);
-        //}
+        public async Task DeleteRefreshToken(Guid id)
+        {
+            await DeleteAsync(id);
+        }
 
-        //public Task DeleteRefreshToken(Guid id)
-        //{
-        //    _refreshTokens.RemoveAll(r => r.Id == id);
+        public async Task<UserRefreshToken> GetByUserId(string userId)
+        {
+            try
+            {
+                return Table().FirstOrDefault(r => r.UserId == userId);
+            }
+            catch (Exception)
+            {
 
-        //    return Task.CompletedTask;
-        //}
-
-        //public Task DeleteAllRefreshTokens(string userName)
-        //{
-        //    _refreshTokens.RemoveAll(r => r.UserName == userName);
-
-        //    return Task.CompletedTask;
-        //}
+                return null;
+            }
+        }
 
         #endregion
     }
