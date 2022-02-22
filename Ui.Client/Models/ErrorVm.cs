@@ -2,7 +2,7 @@ using System;
 
 namespace Ui.Client.Models
 {
-    public class ErrorViewModel
+    public class ErrorVm
     {
         public string RequestId { get; set; }
 

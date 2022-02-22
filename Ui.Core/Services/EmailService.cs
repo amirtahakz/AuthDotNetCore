@@ -14,19 +14,19 @@ namespace Ui.Core.Services
     {
         #region Methods
 
-        public async Task SendEmailAsync(EmailVm email)
+        public async Task SendEmailAsync(EmailModel email)
         {
             MailMessage mail = new MailMessage()
             {
-                From = new MailAddress("amirtahakazemtabarzahraei@gmail.com", "نام نمایشی"),
+                From = new MailAddress("amirtahakazemtabarzahraei@gmail.com", "Display Name"),
                 To = { email.To },
                 Subject = email.Subject,
                 Body = email.Body,
                 IsBodyHtml = true,
             };
-            SmtpClient smtpServer = new SmtpClient("smtp.gmail.com", 587) // Host => forExample webmail.codeyad.com
+            SmtpClient smtpServer = new SmtpClient("smtp.gmail.com", 587) // Host => forExample smtp.gmail.com
             {
-                Credentials = new System.Net.NetworkCredential("amirtahakazemtabarzahraei@gmail.com", "amirtahafilm"), // UserName == Email
+                Credentials = new System.Net.NetworkCredential("amirtahakazemtabarzahraei@gmail.com", "amirtahafilm"), // Email  , Password
                 EnableSsl = true,
                 UseDefaultCredentials = false,
                 DeliveryMethod = SmtpDeliveryMethod.Network

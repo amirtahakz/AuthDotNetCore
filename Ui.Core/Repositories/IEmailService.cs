@@ -11,7 +11,7 @@ namespace Ui.Core.Repositories
     {
         #region IMethods
 
-        Task SendEmailAsync(EmailVm email);
+        Task SendEmailAsync(EmailModel email);
 
         #endregion
     }

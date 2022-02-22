@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Ui.Core.ViewModels
 {
-    public class EmailVm
+    public class EmailModel
     {
-        public EmailVm(string to, string subject, string body)
+        public EmailModel(string to, string subject, string body)
         {
             To = to;
             Subject = subject;

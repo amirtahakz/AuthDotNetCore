@@ -11,11 +11,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Ui.Api.Models;
 using Ui.Core.Repositories;
 using Ui.Core.ViewModels;
 using Ui.Data.Entities;
-
-
 
 namespace Ui.Api.Controllers
 {
@@ -51,21 +50,17 @@ namespace Ui.Api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("login")]
-        public async Task<IActionResult> Login([FromBody] LoginApiVm model)
+        public async Task<IActionResult> Login([FromBody] LoginVm model)
         {
 
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "User is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                if (!await _userManager.IsEmailConfirmedAsync(user))
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        new ResponseVm { Status = "Error", Response = "Please confirm your email" });
-                }
+                if (!await _userManager.IsEmailConfirmedAsync(user)) return BadRequest("Please confirm your email");
+
 
                 var userRoles = await _userManager.GetRolesAsync(user);
 
@@ -73,11 +68,7 @@ namespace Ui.Api.Controllers
                 string refreshToken = _tokenGeneratorService.GenerateRefreshToken();
                 var res = _tokenGeneratorService.GetByUserId(user.Id);
                 if (res.Result != null)
-                {
                     await _tokenGeneratorService.DeleteRefreshToken(res.Result.Id);
-                }
-
-
 
                 UserRefreshToken item = new UserRefreshToken()
                 {
@@ -86,7 +77,7 @@ namespace Ui.Api.Controllers
                 };
                 await _tokenGeneratorService.CreateRefreshToken(item);
 
-                return Ok(new ResponseVm { Status = "Success", Response = new { accessToken, refreshToken } });
+                return Ok(new { accessToken, refreshToken });
             }
             return Unauthorized();
         }
@@ -97,25 +88,19 @@ namespace Ui.Api.Controllers
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenVm model)
         {
 
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "model is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             bool isValidRefreshToken = _tokenGeneratorService.ValidateRefreshToken(model.RefreshToken);
-            if (!isValidRefreshToken)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "Invalid refresh token." });
-            }
+            if (!isValidRefreshToken) return BadRequest("Invalid refresh token");
+
 
             UserRefreshToken res = await _tokenGeneratorService.GetByRefreshToken(model.RefreshToken);
-            if (res == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "Invalid refresh token." });
-            }
+            if (res == null) return BadRequest("Invalid refresh token");
+
 
             var user = await _userManager.FindByIdAsync(res.UserId);
-            if (user == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "User not found." });
-            }
+            if (user == null) return NotFound("User not found");
+
 
 
             await _tokenGeneratorService.DeleteRefreshToken(res.Id);
@@ -131,7 +116,7 @@ namespace Ui.Api.Controllers
             };
             await _tokenGeneratorService.CreateRefreshToken(item);
 
-            return Ok(new ResponseVm { Status = "Success", Response = new { accessToken, refreshToken } });
+            return Ok(new { accessToken, refreshToken });
 
         }
 
@@ -140,13 +125,11 @@ namespace Ui.Api.Controllers
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterVm model)
         {
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "User is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var email = await _userManager.FindByEmailAsync(model.Email);
             if (email != null)
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "User already exists!" });
+                return BadRequest("User already exists!");
 
 
             var result = await _userManager.CreateAsync(new IdentityUser()
@@ -158,37 +141,34 @@ namespace Ui.Api.Controllers
 
 
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "User creation failed! Please check user details and try again." });
+                return BadRequest("User creation failed! Please check user details and try again.");
 
             // Send Email Confirmation Code
             var sentEmailCode = await SendEmailCode(new SendEmailCodeVm() { Email = model.Email});
 
-            if (sentEmailCode == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "Something is wrong" });
-            }
+            if (sentEmailCode == null) return BadRequest("Something is wrong");
 
-            return Ok(new ResponseVm { Status = "Success", Response = "User created successfully! please confirm your email" });
+
+            return Ok("User created successfully! please confirm your email");
         }
         [HttpPost]
         [Route("SendEmailCode")]
         public async Task<IActionResult> SendEmailCode([FromBody] SendEmailCodeVm model)
         {
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "Email is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
 
-            if (user == null)
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "User not found" });
+            if (user == null) return NotFound("User not found");
+
+
+            if (user.EmailConfirmed) return BadRequest("User email confirmed before");
+
 
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Confirm email", "Your security code is" + code));
+            await _emailService.SendEmailAsync(new EmailModel(user.Email, "Confirm email", "Your security code is" + code));
 
-            return Ok(new ResponseVm { Status = "Success", Response = "Your email confirmed successfully!" });
+            return Ok("Your email confirmed successfully!");
         }
 
         [HttpPost]
@@ -197,11 +177,11 @@ namespace Ui.Api.Controllers
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterVm model)
         {
 
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "User is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var email = await _userManager.FindByEmailAsync(model.Email);
-            if (email != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "User already exists!" });
+
+            if (email != null) return BadRequest("User already exists!");
 
             var user = new IdentityUser()
             {
@@ -213,7 +193,7 @@ namespace Ui.Api.Controllers
 
 
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseVm { Status = "Error", Response = "User creation failed! Please check user details and try again." });
+                return BadRequest("User creation failed! Please check user details and try again.");
 
 
             if (!await _roleManager.RoleExistsAsync(UserRolesVm.Admin))
@@ -223,37 +203,29 @@ namespace Ui.Api.Controllers
                 await _roleManager.CreateAsync(new IdentityRole(UserRolesVm.User));
 
             if (await _roleManager.RoleExistsAsync(UserRolesVm.Admin))
-            {
                 await _userManager.AddToRoleAsync(user, UserRolesVm.Admin);
-            }
 
-            return Ok(new ResponseVm { Status = "Success", Response = "User created successfully!" });
+            return Ok("User created successfully!");
         }
 
         [HttpPost]
         [Route("ConfirmEmailCode")]
         public async Task<IActionResult> ConfirmEmailCode([FromBody] ConfirmEmailCodeVm model)
         {
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "User is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var user = _userManager.Users.SingleOrDefault(u => u.Email == model.Email);
-            if (user == null)
-            {
-                return NotFound();
-            }
+
+            if (user == null) return NotFound("User not found");
 
             bool result = await _userManager.VerifyTwoFactorTokenAsync(user, "Email", model.Code);
-            if (!result)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "Email is not confirmed" });
-            }
+
+            if (!result) return BadRequest("Email is not confirmed");
 
             user.EmailConfirmed = true;
             await _userManager.UpdateAsync(user);
 
-            return Ok(new ResponseVm { Status = "Success", Response = "Your email confirmed successfully!" });
+            return Ok("Your email confirmed successfully!");
         }
 
         [HttpPost]
@@ -261,57 +233,42 @@ namespace Ui.Api.Controllers
         [Route("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordVm model)
         {
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "Email is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "User is not exists!" });
+            if (user == null) return NotFound("User is not exists!");
 
-            if (!await _userManager.IsEmailConfirmedAsync(user))
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "Please confirm your email" });
-            }
+            if (!await _userManager.IsEmailConfirmedAsync(user)) return BadRequest("Please confirm your email");
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             string? callBackUrl = Url.ActionLink("ResetPassword", "Account",
                 new { email = user.Email, token = token }, Request.Scheme);
 
-            string html = System.IO.File.ReadAllText(@"E:\Dot Net Core Projects\My\Identity\DotNetCore\Ui.Api\Tools\ResetPasswordEmail.html");
-            string body = html + callBackUrl;
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "بازیابی کلمه عبور", body));
+            await _emailService.SendEmailAsync(new EmailModel(user.Email,"Reset Password", "Please reset your password by clicking <a href=\"" + callBackUrl + "\">here</a>"));
 
-            return Ok(new ResponseVm { Status = "Success", Response = "Forgot password email sent successfully!" });
+            return Ok("Forgot password email sent successfully!");
         }
 
-        [HttpPost]
+        [HttpPost] 
         [AllowAnonymous]
         [Route("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordVm model)
         {
-            if (!ModelState.IsValid) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "Email is not valid" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
 
-            if (user == null) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "User is not exists!" });
+            if (user == null) return NotFound("User is not exists!");
 
-            if (!await _userManager.IsEmailConfirmedAsync(user))
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseVm { Status = "Error", Response = "Please confirm your email" });
-            }
+            if (!await _userManager.IsEmailConfirmedAsync(user)) return BadRequest("Please confirm your email");
 
             var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
             var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
-            if (!result.Succeeded) return StatusCode(StatusCodes.Status500InternalServerError,
-                new ResponseVm { Status = "Error", Response = "Something is wrong" });
+            if (!result.Succeeded) return BadRequest("Something is wrong");
 
-            return Ok(new ResponseVm { Status = "Success", Response = "Password Changed successfully!" });
+            return Ok("Password Changed successfully!");
         }
 
         [HttpGet]

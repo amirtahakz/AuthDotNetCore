@@ -13,6 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Ui.Client.Models;
 using Ui.Core.Repositories;
 using Ui.Core.ViewModels;
 
@@ -147,7 +148,7 @@ namespace Ui.Client.Controllers
             // Send Email Confirmation Code
             var user = await _userManager.FindByEmailAsync(model.Email);
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Email confirmation","Ypur security code is" + code));
+            await _emailService.SendEmailAsync(new EmailModel(user.Email, "Email confirmation","Ypur security code is" + code));
 
             return RedirectToAction("ConfirmEmailCode", new { email = user.Email });
         }
@@ -158,6 +159,7 @@ namespace Ui.Client.Controllers
         {
             return View();
         }
+        [HttpPost]
         public async Task<IActionResult> SendEmailCodeVerification(SendEmailCodeVm model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -169,8 +171,14 @@ namespace Ui.Client.Controllers
                 ModelState.AddModelError(string.Empty, "User not found");
                 return View(model);
             }
+
+            if (user.EmailConfirmed)
+            {
+                ModelState.AddModelError(string.Empty, "User email confirmed before");
+                return View(model);
+            }
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Email confirmation", "Ypur security code is" + code));
+            await _emailService.SendEmailAsync(new EmailModel(user.Email, "Email confirmation", "Ypur security code is" + code));
 
             return RedirectToAction("Login");
         }
@@ -256,7 +264,7 @@ namespace Ui.Client.Controllers
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             string? callBackUrl = Url.ActionLink("ResetPassword", "Account", new { email = user.Email, token = token }, Request.Scheme);
-            await _emailService.SendEmailAsync(new EmailVm(user.Email, "Reset Password", "Please reset your password by clicking <a href=\"" + callBackUrl + "\">here</a>"));
+            await _emailService.SendEmailAsync(new EmailModel(user.Email, "Reset Password", "Please reset your password by clicking <a href=\"" + callBackUrl + "\">here</a>"));
             ViewBag.IsSent = true;
             return View();
         }
