@@ -32,7 +32,13 @@ namespace Ui.Api.Controllers
         private readonly IEmailService _emailService;
         private readonly ITokenGeneratorService _tokenGeneratorService;
 
-        public AccountController(IConfiguration config, IExampleService exampleService, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, ITokenGeneratorService tokenGeneratorService)
+        public AccountController(IConfiguration config,
+            IExampleService exampleService,
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            IEmailService emailService,
+            ITokenGeneratorService tokenGeneratorService)
         {
             _exampleService = exampleService;
             _configuration = config;
@@ -136,7 +142,7 @@ namespace Ui.Api.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
-                PhoneNumber = model.Phone
+                PhoneNumber = model.Phone,
             }, model.Password);
 
 

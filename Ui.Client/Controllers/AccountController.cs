@@ -28,14 +28,21 @@ namespace Ui.Client.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IEmailService _emailService;
         private readonly IViewRenderService _viewRenderService;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountController(IExampleService userService, UserManager<IdentityUser> userManager, IEmailService emailService, SignInManager<IdentityUser> signInManager, IViewRenderService viewRenderService)
+        public AccountController(IExampleService userService,
+            RoleManager<IdentityRole> roleManager,
+            UserManager<IdentityUser> userManager,
+            IEmailService emailService,
+            SignInManager<IdentityUser> signInManager,
+            IViewRenderService viewRenderService)
         {
             _exampleService = userService;
             _userManager = userManager;
             _emailService = emailService;
             _signInManager = signInManager;
             _viewRenderService = viewRenderService;
+            _roleManager = roleManager;
         }
 
         #endregion
@@ -83,7 +90,8 @@ namespace Ui.Client.Controllers
             }
 
             var result =
-                await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+                await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
+            
 
             if (result.Succeeded)
             {
@@ -145,6 +153,21 @@ namespace Ui.Client.Controllers
                     return View(model);
                 }
             }
+
+            
+            if (!await _roleManager.RoleExistsAsync(UserRolesVm.Admin))
+                await _roleManager.CreateAsync(new IdentityRole(UserRolesVm.Admin));
+
+            if (!await _roleManager.RoleExistsAsync(UserRolesVm.User))
+                await _roleManager.CreateAsync(new IdentityRole(UserRolesVm.User));
+
+            if (await _roleManager.RoleExistsAsync(UserRolesVm.User))
+            {
+                var item = await _userManager.FindByEmailAsync(model.Email);
+                await _userManager.AddToRoleAsync(item, UserRolesVm.User);
+            }    
+
+
             // Send Email Confirmation Code
             var user = await _userManager.FindByEmailAsync(model.Email);
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
