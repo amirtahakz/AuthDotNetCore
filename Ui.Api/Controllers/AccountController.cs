@@ -174,7 +174,7 @@ namespace Ui.Api.Controllers
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
             await _emailService.SendEmailAsync(new EmailModel(user.Email, "Confirm email", "Your security code is" + code));
 
-            return Ok("Your email confirmed successfully!");
+            return Ok("Confirmation email sent successfully!");
         }
 
         [HttpPost]
@@ -211,7 +211,7 @@ namespace Ui.Api.Controllers
             if (await _roleManager.RoleExistsAsync(UserRolesVm.Admin))
                 await _userManager.AddToRoleAsync(user, UserRolesVm.Admin);
 
-            return Ok("User created successfully!");
+            return Ok("Admin created successfully!");
         }
 
         [HttpPost]
