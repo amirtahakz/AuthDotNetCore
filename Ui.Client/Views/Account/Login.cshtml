@@ -1,42 +1,32 @@
 ﻿@model Ui.Client.Models.LoginVm
 
-@{
-    ViewData["Title"] = "Login";
-    var returnUrl = ViewBag.ReturnUrl as string;
-}
+<div id="login">
 
-<h4>Log In</h4>
-<hr />
-<div class="row">
-    <div class="col-md-6">
-        <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="/">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
+  <h1><strong>Welcome.</strong> Please login.</h1>
+
+  <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="/">
+      <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <fieldset>
+
+      <p><input asp-for="Email" placeholder="Email" class="text-box"></p>
+      <span asp-validation-for="Email" class="text-danger"></span>
+
+      <p><input asp-for="Password" placeholder="Password"></p>
+      <span asp-validation-for="Password" class="text-danger"></span>
+
+      <div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="RememberMe" /> @Html.DisplayNameFor(model => model.RememberMe)
                 </label>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Login" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-    <partial name="Account/_ExternalLoginsListPartial" />
-</div>
 
-<div>
-    <a asp-controller="Account" asp-action="ForgotPassword">Forgot Your Password ?</a>
-    <a asp-controller="Account" asp-action="SendEmailCodeVerification">Resend email verification</a>
-    <a asp-controller="Home" asp-action="Index">Back to Home</a>
+      <p><a asp-controller="Account" asp-action="ForgotPassword">Forgot Your Password ?</a></p>
+
+      <p><input type="submit" value="Login"></p>
+
+    </fieldset>
+
+  </form>
+  <partial name="Account/_ExternalLoginsListPartial" />
 </div>
 

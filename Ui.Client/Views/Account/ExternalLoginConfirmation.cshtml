@@ -3,24 +3,26 @@
     ViewBag.Title = "Register";
 }
 
-<h4>Register</h4>
-<hr />
-<div class="row">
-    <div class="col-md-6">
-        <form method="post" asp-controller="Account" asp-action="ExternalLoginConfirmation" asp-route-returnUrl="/">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Register" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
 
+<div id="login">
+
+  <h1><strong>Welcome.</strong> Please login.</h1>
+
+  <form method="post" asp-controller="Account" asp-action="ExternalLoginConfirmation" asp-route-returnUrl="/">
+      <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <fieldset>
+
+
+      <p><input asp-for="Phone" type="tel" placeholder="Password"></p>
+      <span asp-validation-for="Phone" class="text-danger"></span>
+
+
+      <p><input type="submit" value="Register"></p>
+
+    </fieldset>
+
+  </form>
+</div>
 @section Scripts {
     @{
     await Html.RenderPartialAsync("_ValidationScriptsPartial");

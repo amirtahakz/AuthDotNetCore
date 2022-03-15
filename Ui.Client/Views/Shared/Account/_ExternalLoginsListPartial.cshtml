@@ -5,7 +5,7 @@
     var returnUrl = ViewBag.ReturnUrl as string;
 }
 
-<div class="col-md-6">
+<div>
     @{
         if (Model.ExternalLogins.Count == 0)
         {
@@ -13,16 +13,16 @@
         }
         else
         {
-            <div>External login</div>
+            <p><span class="btn-round">or</span></p>
             <form method="post" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="returnUrl">
                 @foreach (var provider in Model.ExternalLogins)
                 {
-                    <button type="submit" class="btn btn-primary"
-                    name="provider"
-                    value="@provider.Name"
-                    title="Login using your @provider.DisplayName account">
-                        @provider.DisplayName
-                    </button>
+                    <p>
+
+    <a class="external-login-before"><span class="fontawesome-google"></span></a>
+    <button type="submit" name="provider" title="Login using your @provider.DisplayName account" value="@provider.Name" class="external-login">Login Using @provider.DisplayName</button>
+
+  </p>
                 }
             </form>
         }
