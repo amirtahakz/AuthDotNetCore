@@ -25,28 +25,6 @@ namespace Ui.Core.Services
         #endregion
 
         #region GetAll
-
-        public virtual async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> where = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderby = null, string includes = "")
-        {
-            IQueryable<TEntity> query = _dbset;
-            if (where != null)
-            {
-                query = query.Where(where);
-            }
-            if (orderby != null)
-            {
-                query = orderby(query);
-            }
-            if (includes != "")
-            {
-                foreach (var item in includes.Split(','))
-                {
-                    query = query.Include(includes);
-                }
-            }
-            return await query.Where(x => x.IsRemove == false).ToListAsync();
-
-        }
         public virtual IQueryable<TEntity> Table()
         {
             return _dbset.AsNoTracking();
