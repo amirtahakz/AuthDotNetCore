@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Ui.Core.Repositories;
 using Ui.Data.Context;
 using Ui.Data.Entities;
 
 namespace Ui.Core.Services
 {
-    public abstract class BaseService<TEntity> where TEntity : BaseEntity
+    public abstract class BaseService<TEntity> : IBaseService<TEntity> where TEntity : BaseEntity
     {
         #region Connections
 

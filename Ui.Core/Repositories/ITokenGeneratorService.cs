@@ -8,7 +8,7 @@ using Ui.Data.Entities;
 
 namespace Ui.Core.Repositories
 {
-    public interface ITokenGeneratorService
+    public interface ITokenGeneratorService : IBaseService<UserRefreshToken>
     {
         #region IMethods
 

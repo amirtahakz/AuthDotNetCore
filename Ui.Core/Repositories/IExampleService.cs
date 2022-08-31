@@ -8,7 +8,7 @@ using Ui.Data.Entities;
 
 namespace Ui.Core.Repositories
 {
-    public interface IExampleService
+    public interface IExampleService : IBaseService<Example>
     {
         #region IMethods
 
